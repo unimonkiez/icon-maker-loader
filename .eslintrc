@@ -1,0 +1,39 @@
+{
+  "root": true,
+  "parser": "babel-eslint",
+  "env": {
+    "node": true,
+    "es6": true,
+    "browser": false
+  },
+  "extends": "airbnb",
+  "ecmaFeatures": {
+    "modules": false
+  },
+  "plugins": [
+    "sort-class-members"
+  ],
+  "rules": {
+    "arrow-parens": [2, "as-needed"],
+    "no-underscore-dangle": [2, { "allowAfterThis": true }],
+    "no-console": 0,
+    "comma-dangle": [2, "never"], // not sure why airbnb turned this on. gross!
+    "max-len": [2, 200, 4],
+    "no-else-return": 0,
+    "new-cap": 0,
+    "prefer-template": 0,
+    "arrow-body-style": 0,
+    "no-nested-ternary": 0,
+    "default-case": 0,
+    "sort-class-members/sort-class-members": [2, {
+      "order": [
+        "[static-properties]",
+        "[static-methods]",
+        "[properties]",
+        "[conventional-private-properties]",
+        "constructor",
+        "[everything-else]"
+      ]
+    }]
+  }
+}
