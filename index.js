@@ -19,19 +19,25 @@ module.exports = function iconMakerLoader() {
   const params = loaderUtils.parseQuery(this.query);
   const fileName = path.basename(pathToSvg, '.svg');
   const fontFamily = params.fontFamily || 'default';
-  const cb = this.async();
   const font = fonts[fontFamily];
-  font.doOnRun.push(pathTojs => {
+  console.log('way before load - ' + fontFamily + ' - ' + font.count);
+  const cb = this.async();
+  const exportFn = pathTojs => {
     cb(undefined, `
-      //var style = require(${JSON.stringify(pathTojs)});
-      var style = false;
+      var style = require(${JSON.stringify(pathTojs)});
       if (style) {
         module.exports = style[${JSON.stringify(fontFamily)}] + " " + style[${JSON.stringify(`${fontFamily}-${fileName}`)}];
       } else {
         module.exports = ${JSON.stringify(`${fontFamily} ${fontFamily}-${fileName}`)};
       }
     `);
-  });
+    const indexOfExportFn = font.doOnRun.indexOf(exportFn);
+    if (indexOfExportFn !== -1) {
+      font.doOnRun.splice(indexOfExportFn, 1);
+    }
+  };
+  font.doOnRun.push(exportFn);
+  console.log('load - ' + fontFamily + ' - ' + font.count);
   font.count -= 1;
   if (font.count === 0) {
     console.log('GO');
@@ -49,7 +55,7 @@ module.exports = function iconMakerLoader() {
           var style = require("./${fontFamily}.css");
           module.exports = style.locals;
           `, () => {
-            font.doOnRun.forEach(fn => fn(pathToFontJs));
+            font.doOnRun.slice().forEach(fn => fn(pathToFontJs));
             fonts[fontFamily] = undefined;
           });
         });
@@ -57,7 +63,7 @@ module.exports = function iconMakerLoader() {
     });
   }
 };
-module.exports.pitch = function iconMakerLoaderPitch(pathToSvg, _, data) {
+module.exports.pitch = function iconMakerLoaderPitch(pathToSvg) {
   const params = loaderUtils.parseQuery(this.query);
   const fontFamily = params.fontFamily || 'default';
   if (fonts[fontFamily] === undefined) {
@@ -69,7 +75,7 @@ module.exports.pitch = function iconMakerLoaderPitch(pathToSvg, _, data) {
     };
   }
   const font = fonts[fontFamily];
-  console.log('pitch - ' + font.count);
+  console.log('pitch - ' + fontFamily + ' - ' + font.count);
   font.count += 1;
   font.iconMaker.addSvg(pathToSvg, fontFamily);
 };
