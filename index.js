@@ -32,13 +32,9 @@ module.exports = function iconMakerLoader() {
       }
     `);
   });
-  console.log('loader - ' + font.count);
   font.count -= 1;
   if (font.count === 0) {
     console.log('GO');
-    console.log(fileName);
-    console.log(this.query);
-    console.log(fontFamily);
     font.iconMaker.run((err, outFonts) => {
       if (err) {
         throw err;
@@ -61,22 +57,20 @@ module.exports = function iconMakerLoader() {
     });
   }
 };
-module.exports.pitch = function iconMakerLoaderPitch(pathToSvg) {
-  if (pathToSvg.indexOf('!') === -1) {
-    const params = loaderUtils.parseQuery(this.query);
-    const fontFamily = params.fontFamily || 'default';
-    if (fonts[fontFamily] === undefined) {
-      fonts[fontFamily] = {
-        count: 0,
-        lastPathToSvg: pathToSvg,
-        doOnRun: [],
-        iconMaker: new IconMaker()
-      };
-    }
-    const font = fonts[fontFamily];
-    console.log('pitch - ' + font.count);
-    font.count += 1;
-    font.iconMaker.addSvg(pathToSvg, fontFamily);
+module.exports.pitch = function iconMakerLoaderPitch(pathToSvg, _, data) {
+  const params = loaderUtils.parseQuery(this.query);
+  const fontFamily = params.fontFamily || 'default';
+  if (fonts[fontFamily] === undefined) {
+    fonts[fontFamily] = {
+      count: 0,
+      lastPathToSvg: pathToSvg,
+      doOnRun: [],
+      iconMaker: new IconMaker()
+    };
   }
+  const font = fonts[fontFamily];
+  console.log('pitch - ' + font.count);
+  font.count += 1;
+  font.iconMaker.addSvg(pathToSvg, fontFamily);
 };
 module.exports.raw = true;

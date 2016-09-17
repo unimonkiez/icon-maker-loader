@@ -19,8 +19,8 @@ module.exports = {
         include: path.join(__dirname, 'svg')
       }, {
         test: /\.svg$/,
-        loader: iconMakerLoader,
-        include: path.join(__dirname, 'svg2')
+        loader: iconMakerLoader + '?fontFamily=bla',
+        include: path.join(__dirname, '2svg')
       }, {
         test: /\.css$/g,
         loader: 'css'
@@ -29,7 +29,7 @@ module.exports = {
         loader: 'url',
         exclude: [
           path.join(__dirname, 'svg'),
-          path.join(__dirname, 'svg2')
+          path.join(__dirname, '2svg')
         ]
       }
     ]
