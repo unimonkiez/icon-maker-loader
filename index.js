@@ -13,30 +13,32 @@ try {
 }
 
 const fonts = {};
-let count = 0;
 
 module.exports = function iconMakerLoader() {
-  count -= 1;
   const pathToSvg = this.resourcePath;
   const params = loaderUtils.parseQuery(this.query);
-
   const fileName = path.basename(pathToSvg, '.svg');
   const fontFamily = params.fontFamily || 'default';
   const cb = this.async();
   const font = fonts[fontFamily];
-  font.doOnRun.push(pathToCss => {
+  font.doOnRun.push(pathTojs => {
     cb(undefined, `
-      var style = require(${JSON.stringify(pathToCss)});
-      var locals = style.locals;
-      if (locals) {
-        module.exports = locals[${JSON.stringify(fontFamily)}] + " " + locals[${JSON.stringify(`${fontFamily}-${fileName}`)}];
+      //var style = require(${JSON.stringify(pathTojs)});
+      var style = false;
+      if (style) {
+        module.exports = style[${JSON.stringify(fontFamily)}] + " " + style[${JSON.stringify(`${fontFamily}-${fileName}`)}];
       } else {
         module.exports = ${JSON.stringify(`${fontFamily} ${fontFamily}-${fileName}`)};
       }
     `);
   });
-  if (count === 0) {
+  console.log('loader - ' + font.count);
+  font.count -= 1;
+  if (font.count === 0) {
     console.log('GO');
+    console.log(fileName);
+    console.log(this.query);
+    console.log(fontFamily);
     font.iconMaker.run((err, outFonts) => {
       if (err) {
         throw err;
@@ -45,28 +47,36 @@ module.exports = function iconMakerLoader() {
       Promise.all(outFont.fontFiles.map(fontFile => new Promise(resolve => {
         fs.writeFile(path.join(tmpFolder, path.basename(fontFile.path)), fontFile.contents.toString(), resolve);
       }))).then(() => {
-        const pathToCss = path.join(tmpFolder, `${fontFamily}.css`);
-        fs.writeFile(pathToCss, outFont.css, () => {
-          font.doOnRun.forEach(fn => fn(pathToCss));
-          fonts[fontFamily] = undefined;
+        fs.writeFile(path.join(tmpFolder, `${fontFamily}.css`), outFont.css, () => {
+          const pathToFontJs = path.join(tmpFolder, `${fontFamily}.js`);
+          fs.writeFile(pathToFontJs, `
+          var style = require("./${fontFamily}.css");
+          module.exports = style.locals;
+          `, () => {
+            font.doOnRun.forEach(fn => fn(pathToFontJs));
+            fonts[fontFamily] = undefined;
+          });
         });
       });
     });
   }
 };
 module.exports.pitch = function iconMakerLoaderPitch(pathToSvg) {
-  count += 1;
-  console.log(pathToSvg);
-  const params = loaderUtils.parseQuery(this.query);
-  const fontFamily = params.fontFamily || 'default';
-  if (fonts[fontFamily] === undefined) {
-    fonts[fontFamily] = {
-      lastPathToSvg: pathToSvg,
-      doOnRun: [],
-      iconMaker: new IconMaker()
-    };
+  if (pathToSvg.indexOf('!') === -1) {
+    const params = loaderUtils.parseQuery(this.query);
+    const fontFamily = params.fontFamily || 'default';
+    if (fonts[fontFamily] === undefined) {
+      fonts[fontFamily] = {
+        count: 0,
+        lastPathToSvg: pathToSvg,
+        doOnRun: [],
+        iconMaker: new IconMaker()
+      };
+    }
+    const font = fonts[fontFamily];
+    console.log('pitch - ' + font.count);
+    font.count += 1;
+    font.iconMaker.addSvg(pathToSvg, fontFamily);
   }
-  const font = fonts[fontFamily];
-  font.iconMaker.addSvg(pathToSvg, fontFamily);
 };
 module.exports.raw = true;
