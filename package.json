@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "eslint --ext .js,.jsx .",
+    "test": "node test/index.js"
   },
   "keywords": [
     "icon",
@@ -20,12 +21,16 @@
   "license": "ISC",
   "devDependencies": {
     "babel-eslint": "^6.1.2",
+    "css-loader": "^0.25.0",
     "eslint": "^3.5.0",
     "eslint-config-airbnb": "^11.1.0",
     "eslint-plugin-import": "^1.15.0",
     "eslint-plugin-jsx-a11y": "^2.2.2",
     "eslint-plugin-react": "^6.2.2",
-    "eslint-plugin-sort-class-members": "^1.1.0"
+    "eslint-plugin-sort-class-members": "^1.1.0",
+    "style-loader": "^0.13.1",
+    "url-loader": "^0.5.7",
+    "webpack": "^1.13.2"
   },
   "dependencies": {
     "glob": "^7.0.6",
