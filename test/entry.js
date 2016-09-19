@@ -5,5 +5,6 @@ const yinYan3 = require('./2svg/yin-yan-3.svg');
 module.exports = {
   yinYan,
   yinYan2,
-  yinYan3
+  yinYan3,
+  a: 11
 };
