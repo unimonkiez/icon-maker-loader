@@ -21,20 +21,17 @@
   "license": "ISC",
   "devDependencies": {
     "babel-eslint": "^6.1.2",
-    "css-loader": "^0.25.0",
     "eslint": "^3.5.0",
     "eslint-config-airbnb": "^11.1.0",
     "eslint-plugin-import": "^1.15.0",
     "eslint-plugin-jsx-a11y": "^2.2.2",
     "eslint-plugin-react": "^6.2.2",
     "eslint-plugin-sort-class-members": "^1.1.0",
-    "style-loader": "^0.13.1",
-    "url-loader": "^0.5.7",
     "webpack": "^1.13.2"
   },
   "dependencies": {
     "glob": "^7.0.6",
-    "icon-maker": "^0.1.0",
+    "icon-maker": "^0.2.0",
     "loader-utils": "^0.2.16",
     "node-uuid": "^1.4.7",
     "path": "^0.12.7"

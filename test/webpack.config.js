@@ -1,7 +1,5 @@
 const path = require('path');
 
-const iconMakerLoader = require.resolve('../');
-
 module.exports = {
   context: path.resolve(__dirname),
   entry: './entry.js',
@@ -15,11 +13,11 @@ module.exports = {
     loaders: [
       {
         test: /\.svg$/,
-        loader: iconMakerLoader,
+        loader: 'icon-maker',
         include: path.join(__dirname, 'svg')
       }, {
         test: /\.svg$/,
-        loader: iconMakerLoader + '?fontFamily=bla',
+        loader: 'icon-maker?fontFamily=bla',
         include: path.join(__dirname, '2svg')
       }, {
         test: /\.css$/g,
