@@ -10,9 +10,6 @@
   "ecmaFeatures": {
     "modules": false
   },
-  "plugins": [
-    "sort-class-members"
-  ],
   "rules": {
     "arrow-parens": [2, "as-needed"],
     "no-underscore-dangle": [2, { "allowAfterThis": true }],
@@ -26,16 +23,6 @@
     "no-nested-ternary": 0,
     "default-case": 0,
     "react/require-extension": 0,
-    "import/no-extraneous-dependencies": [2, { "devDependencies" : true}],
-    "sort-class-members/sort-class-members": [2, {
-      "order": [
-        "[static-properties]",
-        "[static-methods]",
-        "[properties]",
-        "[conventional-private-properties]",
-        "constructor",
-        "[everything-else]"
-      ]
-    }]
+    "import/no-extraneous-dependencies": [2, { "devDependencies" : true}]
   }
 }

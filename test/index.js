@@ -1,8 +1,13 @@
 const webpack = require('webpack');
 const config = require('./webpack.config.js');
+const path = require('path');
+const fs = require('fs');
+
+fs.unlinkSync(path.join(__dirname, 'build', 'bundle.js'));
 
 const compiler = webpack(config);
-compiler.watch({}, err => {
+// compiler.watch({}, err => {
+compiler.run(err => {
   if (err) {
     throw err;
   }

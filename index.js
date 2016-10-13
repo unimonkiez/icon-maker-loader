@@ -4,7 +4,6 @@ const path = require('path');
 const fs = require('fs');
 const createTmpDir = require('./create-tmp-dir.js');
 
-// const tmpFolder = path.join(os.tmpdir(), 'icon-maker-loader-tmp', uuid.v4());
 const tmpFolder = createTmpDir();
 
 const fonts = {};
@@ -35,7 +34,13 @@ const writeFontFiles = (fontFamily, font, cb) => {
       }),
       new Promise((resolve, reject) => {
         fs.writeFile(pathToFontJs, `
-          var style = require("./${fontFamily}.css");
+          var style;
+          try {
+            style = require("./${fontFamily}.css");
+          } catch(e) {
+            if (e.code !== 'MODULE_NOT_FOUND') throw e;
+            style = {};
+          }
           module.exports = style.locals;`, writeErr => {
             if (writeErr) {
               reject(writeErr);
@@ -53,9 +58,6 @@ const writeFontFiles = (fontFamily, font, cb) => {
 };
 
 module.exports = function iconMakerLoader() {
-  if (this.cacheable) {
-    this.cacheable();
-  }
   const pathToSvg = this.resourcePath;
   const params = loaderUtils.parseQuery(this.query);
   const fileName = path.basename(pathToSvg, '.svg');
@@ -70,17 +72,15 @@ module.exports = function iconMakerLoader() {
       module.exports = ${JSON.stringify(`${fontFamily} ${fontFamily}-${fileName}`)};
     }
   `;
+
   if (font.paths.indexOf(pathToSvg) === -1) {
     font.count -= 1;
     if (font.count === 0) {
-      console.log('GO - ' + fontFamily);
       writeFontFiles(fontFamily, font, err => {
         if (err) {
           throw err;
         }
-        console.log('YES?');
         font.doOnRun.forEach(fn => fn());
-        console.log('DONE - ' + fontFamily + `(${font.doOnRun.length})`);
         fonts[fontFamily] = {
           paths: fonts[fontFamily].paths,
           created: true
@@ -88,20 +88,16 @@ module.exports = function iconMakerLoader() {
       });
     }
     if (font.created) {
-      console.log('load - created but not in');
       return moduleContent;
     } else {
-      console.log('load - will wait');
       const cb = this.async();
       font.doOnRun.push(() => {
-        console.log('loadding...');
-        cb(undefined, moduleContent);
         font.paths.push(pathToSvg);
+        cb(undefined, moduleContent);
       });
       return undefined;
     }
   } else {
-    console.log('load - already in');
     return moduleContent;
   }
 };
@@ -119,11 +115,8 @@ module.exports.pitch = function iconMakerLoaderPitch(pathToSvg) {
   }
   const font = fonts[fontFamily];
   if (font.paths.indexOf(pathToSvg) === -1) {
-    console.log('pitch first time');
     font.count += 1;
     font.iconMaker.addSvg(pathToSvg, fontFamily);
-  } else {
-    console.log('pitch else');
   }
 };
 module.exports.raw = true;
