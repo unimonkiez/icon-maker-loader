@@ -3,7 +3,12 @@ const config = require('./webpack.config.js');
 const path = require('path');
 const fs = require('fs');
 
-fs.unlinkSync(path.join(__dirname, 'build', 'bundle.js'));
+try {
+  fs.unlinkSync(path.join(__dirname, 'build', 'bundle.js'));
+} catch (e) {
+  // doesnt exists, sure why not
+}
+
 
 const compiler = webpack(config);
 // compiler.watch({}, err => {
