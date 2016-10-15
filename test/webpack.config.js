@@ -31,5 +31,10 @@ module.exports = {
         ]
       }
     ]
+  },
+  resolve: {
+    alias: {
+      'icon-maker-loader': path.join(__dirname, '..')
+    }
   }
 };
