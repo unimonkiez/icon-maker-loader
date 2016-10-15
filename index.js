@@ -104,13 +104,15 @@ module.exports = function iconMakerLoader() {
 module.exports.pitch = function iconMakerLoaderPitch(pathToSvg) {
   const params = loaderUtils.parseQuery(this.query);
   const fontFamily = params.fontFamily || 'default';
+  const isLocalCss = params.localCss !== undefined;
+  const files = params.files !== undefined ? params.files.split(',') : ['eot', 'svg', 'ttf', 'woff'];
   if (fonts[fontFamily] === undefined || fonts[fontFamily].count === undefined) {
     fonts[fontFamily] = {
       count: 0,
       paths: fonts[fontFamily] === undefined ? [] : fonts[fontFamily].paths,
       created: fonts[fontFamily] === undefined ? false : fonts[fontFamily].created,
       doOnRun: [],
-      iconMaker: new IconMaker({ fontFamily })
+      iconMaker: new IconMaker({ fontFamily, files, isLocalCss })
     };
   }
   const font = fonts[fontFamily];
