@@ -13,11 +13,11 @@ module.exports = {
     loaders: [
       {
         test: /\.svg$/,
-        loader: 'icon-maker',
+        loader: '../index.js',
         include: path.join(__dirname, 'svg')
       }, {
         test: /\.svg$/,
-        loader: 'icon-maker?fontFamily=bla',
+        loader: '../index.js?fontFamily=bla',
         include: path.join(__dirname, '2svg')
       }, {
         test: /\.css$/g,
@@ -31,10 +31,5 @@ module.exports = {
         ]
       }
     ]
-  },
-  resolve: {
-    alias: {
-      'icon-maker-loader': path.join(__dirname, '..')
-    }
   }
 };
