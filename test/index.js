@@ -20,7 +20,7 @@ compiler.run(err => {
     delete require.cache[require.resolve('./build/bundle.js')];
 
     // Disable global require because need to import the build only after it's done building
-    // eslint-disable-next-line global-require
+    // eslint-disable-next-line global-require,import/no-unresolved
     const build = require('./build/bundle.js');
 
     console.log('result:', build);

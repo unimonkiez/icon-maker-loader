@@ -15,11 +15,23 @@ const writeFontFiles = (fontFamily, font, cb) => {
       throw err;
     }
     Promise.all(outFont.fontFiles.map(fontFile => new Promise((resolve, reject) => {
-      fs.writeFile(path.join(tmpFolder, path.basename(fontFile.path)), fontFile.contents.toString(), writeErr => {
-        if (writeErr) {
-          reject(writeErr);
+      fs.open(path.join(tmpFolder, path.basename(fontFile.path)), 'a', (openErr, fd) => {
+        if (openErr) {
+          reject(openErr);
         } else {
-          resolve();
+          fs.write(fd, fontFile.contents, 0, fontFile.contents.length, writeErr => {
+            if (writeErr) {
+              reject(writeErr);
+            } else {
+              fs.close(fd, closeErr => {
+                if (closeErr) {
+                  reject(closeErr);
+                } else {
+                  resolve();
+                }
+              });
+            }
+          });
         }
       });
     })).concat([
