@@ -56,7 +56,7 @@ export default MyComponent extends Component {
 </div>
 ```
 ## parameters (query params to the loader)
-* `fontFamily` - (default `default`), can split your icons to multiple font families (for instance, better loading for different pages of your application).
+* `fontFamily` - (default `icon-maker`), can split your icons to multiple font families (for instance, better loading for different pages of your application).
 * `files` - (default `eot,svg,ttf,woff`), can decide which font files will be generated.
 * `localCss` - (default `false`) - will generate css with [local scope](https://github.com/webpack/css-loader#local-scope) to be used with css-loader (you can also convert all of your classes to local using `css-loader?modules` and then this option is not needed).
 

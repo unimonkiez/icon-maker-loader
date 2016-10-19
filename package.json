@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "glob": "^7.0.6",
-    "icon-maker": "^0.2.3",
+    "icon-maker": "^0.2.4",
     "loader-utils": "^0.2.16",
     "node-uuid": "^1.4.7",
     "path": "^0.12.7"

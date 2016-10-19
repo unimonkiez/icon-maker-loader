@@ -115,9 +115,9 @@ module.exports = function iconMakerLoader() {
 };
 module.exports.pitch = function iconMakerLoaderPitch(pathToSvg) {
   const params = loaderUtils.parseQuery(this.query);
-  const fontFamily = params.fontFamily || 'default';
-  const isLocalCss = params.localCss !== undefined;
-  const files = params.files !== undefined ? params.files.split(',') : ['eot', 'svg', 'ttf', 'woff'];
+  const fontFamily = params.fontFamily;
+  const isLocalCss = params.localCss !== undefined ? true : undefined;
+  const files = params.files !== undefined ? params.files.split(',') : undefined;
   if (fonts[fontFamily] === undefined || fonts[fontFamily].count === undefined) {
     fonts[fontFamily] = {
       count: 0,
