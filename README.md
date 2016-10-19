@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/unimonkiez/icon-maker-loader.svg?branch=master)](https://travis-ci.org/unimonkiez/icon-maker-loader)
 # Icon maker loader
-##### Webpack loader to load svg directly to your code
+##### Webpack loader to load svgs to font files and return the css classes to use that icon.
 ## Installation
 * `npm install icon-maker-loader`
 * if you dont have a css and fonts (eot,svg,ttf,woff) loader, you can use `css-loader` and `url-loader`.
