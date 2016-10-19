@@ -73,7 +73,7 @@ module.exports = function iconMakerLoader() {
   const pathToSvg = this.resourcePath;
   const params = loaderUtils.parseQuery(this.query);
   const fileName = path.basename(pathToSvg, '.svg');
-  const fontFamily = params.fontFamily || 'default';
+  const fontFamily = params.fontFamily || 'icon-maker';
   const font = fonts[fontFamily];
   const tmpFolderForNode = path.join('icon-maker-loader', path.relative(__dirname, tmpFolder)).replace(/\\/g, '/');
   const moduleContent = `
@@ -115,7 +115,7 @@ module.exports = function iconMakerLoader() {
 };
 module.exports.pitch = function iconMakerLoaderPitch(pathToSvg) {
   const params = loaderUtils.parseQuery(this.query);
-  const fontFamily = params.fontFamily;
+  const fontFamily = params.fontFamily || 'icon-maker';
   const isLocalCss = params.localCss !== undefined ? true : undefined;
   const files = params.files !== undefined ? params.files.split(',') : undefined;
   if (fonts[fontFamily] === undefined || fonts[fontFamily].count === undefined) {
