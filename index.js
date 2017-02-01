@@ -5,12 +5,13 @@ const fs = require('fs');
 const createTmpDir = require('./create-tmp-dir.js');
 
 const tmpFolder = createTmpDir();
+const tmpFolderForNode = path.join('icon-maker-loader', path.relative(__dirname, tmpFolder)).replace(/\\/g, '/');
 
 const fonts = {};
 
-const writeFontFiles = (fontFamily, font, cb) => {
+const writeFontFiles = (fontFamily, iconMaker, cb) => {
   const pathToFontJs = path.join(tmpFolder, `${fontFamily}.js`);
-  font.iconMaker.run((err, outFont) => {
+  iconMaker.run((err, outFont) => {
     if (err) {
       throw err;
     }
@@ -71,66 +72,40 @@ const writeFontFiles = (fontFamily, font, cb) => {
 
 module.exports = function iconMakerLoader() {
   const pathToSvg = this.resourcePath;
+  console.log('load', pathToSvg);
   const params = loaderUtils.parseQuery(this.query);
   const fileName = path.basename(pathToSvg, '.svg');
   const fontFamily = params.fontFamily || 'icon-maker';
-  const font = fonts[fontFamily];
-  const tmpFolderForNode = path.join('icon-maker-loader', path.relative(__dirname, tmpFolder)).replace(/\\/g, '/');
-  const moduleContent = `
-    var style = require(${JSON.stringify(`${tmpFolderForNode}/${fontFamily}.js`)});
-    if (style) {
-      module.exports = style[${JSON.stringify(fontFamily)}] + " " + style[${JSON.stringify(`${fontFamily}-${fileName}`)}];
-    } else {
-      module.exports = ${JSON.stringify(`${fontFamily} ${fontFamily}-${fileName}`)};
-    }
-  `;
-
-  if (font.paths.indexOf(pathToSvg) === -1) {
-    font.count -= 1;
-    if (font.count === 0) {
-      writeFontFiles(fontFamily, font, err => {
-        if (err) {
-          throw err;
-        }
-        font.doOnRun.forEach(fn => fn());
-        fonts[fontFamily] = {
-          paths: fonts[fontFamily].paths,
-          created: true
-        };
-      });
-    }
-    if (font.created) {
-      return moduleContent;
-    } else {
-      const cb = this.async();
-      font.doOnRun.push(() => {
-        font.paths.push(pathToSvg);
-        cb(undefined, moduleContent);
-      });
-      return undefined;
-    }
-  } else {
-    return moduleContent;
-  }
-};
-module.exports.pitch = function iconMakerLoaderPitch(pathToSvg) {
-  const params = loaderUtils.parseQuery(this.query);
-  const fontFamily = params.fontFamily || 'icon-maker';
   const isLocalCss = params.localCss !== undefined ? true : undefined;
   const files = params.files !== undefined ? params.files.split(',') : undefined;
-  if (fonts[fontFamily] === undefined || fonts[fontFamily].count === undefined) {
+  if (fonts[fontFamily] === undefined) {
     fonts[fontFamily] = {
-      count: 0,
-      paths: fonts[fontFamily] === undefined ? [] : fonts[fontFamily].paths,
-      created: fonts[fontFamily] === undefined ? false : fonts[fontFamily].created,
-      doOnRun: [],
+      doOnFinish: [],
       iconMaker: new IconMaker({ fontFamily, files, isLocalCss })
     };
   }
   const font = fonts[fontFamily];
-  if (font.paths.indexOf(pathToSvg) === -1) {
-    font.count += 1;
-    font.iconMaker.addSvg(pathToSvg, fontFamily);
-  }
+  clearTimeout(font.timeoutIdentifier);
+  font.iconMaker.addSvg(pathToSvg, fontFamily);
+  const cb = this.async();
+  font.doOnFinish.push(err => {
+    const moduleContent = `
+      var style = require(${JSON.stringify(`${tmpFolderForNode}/${fontFamily}.js`)});
+      if (style) {
+        module.exports = style[${JSON.stringify(fontFamily)}] + " " + style[${JSON.stringify(`${fontFamily}-${fileName}`)}];
+      } else {
+        module.exports = ${JSON.stringify(`${fontFamily} ${fontFamily}-${fileName}`)};
+      }
+    `;
+    cb(err, moduleContent);
+  });
+  font.timeoutIdentifier = setTimeout(() => {
+    writeFontFiles(fontFamily, font.iconMaker, err => {
+      console.log(err);
+      setTimeout(() => {
+        font.doOnFinish.forEach(fn => fn(err));
+        delete fonts[fontFamily];
+      }, 1000);
+    });
+  }, 1000);
 };
-module.exports.raw = true;

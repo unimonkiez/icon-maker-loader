@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const uuid = require('node-uuid');
-// const os = require('os');
+const uuid = require('uuid');
 
 module.exports = () => {
   // const tmpFolder = path.join(os.tmpdir(), 'icon-maker-loader-tmp', uuid.v4());
@@ -31,7 +30,6 @@ module.exports = () => {
   // Try to make the tmp dir if not exists
   try {
     fs.mkdirSync(tmpFolder);
-    console.log(`Created dir '${tmpFolder}'.`);
   } catch (e) {
     if (e.code !== 'EEXIST') throw e;
   }
