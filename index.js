@@ -106,65 +106,68 @@ module.exports = function iconMakerLoader() {
   });
   font.timeoutIdentifier = setTimeout(() => {
     const isFirstTime = filesForFont[fontFamily] === undefined;
-    let shouldRebundleFontPromise;
+    let shouldntRebundleFontPromise;
     if (isFirstTime) {
-      shouldRebundleFontPromise = Promise.resolve();
+      // Always build on first time
+      shouldntRebundleFontPromise = Promise.reject();
     } else {
-      shouldRebundleFontPromise = Promise.all(
+      shouldntRebundleFontPromise = Promise.all(
         [
           new Promise((res, rej) => {
             const isThereAChangeInLength = Object.keys(filesForFont[fontFamily]).length !== font.paths.length;
             if (isThereAChangeInLength) {
-              res();
-            } else {
               rej();
+            } else {
+              res();
             }
           })
         ].concat(font.paths.map(currPathToSvg => new Promise((res, rej) => {
           fs.readFile(currPathToSvg, (err, data) => {
-            const isThereAChangeInHashForSvg = filesForFont[fontFamily][currPathToSvg] === getSha1ForContent(data);
+            const isThereAChangeInHashForSvg = filesForFont[fontFamily][currPathToSvg] !== getSha1ForContent(data);
             if (isThereAChangeInHashForSvg) {
-              res();
-            } else {
               rej();
+            } else {
+              res();
             }
           });
         })))
       );
     }
-    shouldRebundleFontPromise.then(() => {
-      filesForFont[fontFamily] = {};
-      Promise.all(
-        [
-          new Promise((res, rej) => {
-            writeFontFiles(fontFamily, font.iconMaker, err => {
+    shouldntRebundleFontPromise.then(
+      () => {
+        font.doOnFinish.forEach(fn => fn());
+        delete fonts[fontFamily];
+      },
+      () => {
+        filesForFont[fontFamily] = {};
+        Promise.all(
+          [
+            new Promise((res, rej) => {
+              writeFontFiles(fontFamily, font.iconMaker, err => {
+                if (err) {
+                  rej(err);
+                } else {
+                  res();
+                }
+              });
+            })
+          ].concat(font.paths.map(currPathToSvg => new Promise((res, rej) => {
+            fs.readFile(currPathToSvg, (err, data) => {
               if (err) {
                 rej(err);
               } else {
+                filesForFont[fontFamily][currPathToSvg] = getSha1ForContent(data);
                 res();
               }
             });
-          })
-        ].concat(font.paths.map(currPathToSvg => new Promise((res, rej) => {
-          fs.readFile(currPathToSvg, (err, data) => {
-            if (err) {
-              rej(err);
-            } else {
-              filesForFont[fontFamily][currPathToSvg] = getSha1ForContent(data);
-              res();
-            }
-          });
-        })))
-      ).then(() => {
-        font.doOnFinish.forEach(fn => fn());
-        delete fonts[fontFamily];
-      }, err => {
-        font.doOnFinish.forEach(fn => fn(err));
-        delete fonts[fontFamily];
+          })))
+        ).then(() => {
+          font.doOnFinish.forEach(fn => fn());
+          delete fonts[fontFamily];
+        }, err => {
+          font.doOnFinish.forEach(fn => fn(err));
+          delete fonts[fontFamily];
+        });
       });
-    }, () => {
-      font.doOnFinish.forEach(fn => fn());
-      delete fonts[fontFamily];
-    });
   }, 1000);
 };
