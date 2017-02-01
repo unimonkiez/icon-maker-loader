@@ -2,12 +2,16 @@ const loaderUtils = require('loader-utils');
 const IconMaker = require('icon-maker');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const createTmpDir = require('./create-tmp-dir.js');
 
 const tmpFolder = createTmpDir();
 const tmpFolderForNode = path.join('icon-maker-loader', path.relative(__dirname, tmpFolder)).replace(/\\/g, '/');
 
 const fonts = {};
+const filesForFont = {};
+
+const getSha1ForContent = content => crypto.createHash('sha1').update(content).digest('hex');
 
 const writeFontFiles = (fontFamily, iconMaker, cb) => {
   const pathToFontJs = path.join(tmpFolder, `${fontFamily}.js`);
@@ -72,7 +76,6 @@ const writeFontFiles = (fontFamily, iconMaker, cb) => {
 
 module.exports = function iconMakerLoader() {
   const pathToSvg = this.resourcePath;
-  console.log('load', pathToSvg);
   const params = loaderUtils.parseQuery(this.query);
   const fileName = path.basename(pathToSvg, '.svg');
   const fontFamily = params.fontFamily || 'icon-maker';
@@ -81,6 +84,7 @@ module.exports = function iconMakerLoader() {
   if (fonts[fontFamily] === undefined) {
     fonts[fontFamily] = {
       doOnFinish: [],
+      paths: [],
       iconMaker: new IconMaker({ fontFamily, files, isLocalCss })
     };
   }
@@ -88,24 +92,70 @@ module.exports = function iconMakerLoader() {
   clearTimeout(font.timeoutIdentifier);
   font.iconMaker.addSvg(pathToSvg, fontFamily);
   const cb = this.async();
+  const moduleContent = `
+  var style = require(${JSON.stringify(`${tmpFolderForNode}/${fontFamily}.js`)});
+  if (style) {
+    module.exports = style[${JSON.stringify(fontFamily)}] + " " + style[${JSON.stringify(`${fontFamily}-${fileName}`)}];
+  } else {
+    module.exports = ${JSON.stringify(`${fontFamily} ${fontFamily}-${fileName}`)};
+  }
+  `;
+  font.paths.push(pathToSvg);
   font.doOnFinish.push(err => {
-    const moduleContent = `
-      var style = require(${JSON.stringify(`${tmpFolderForNode}/${fontFamily}.js`)});
-      if (style) {
-        module.exports = style[${JSON.stringify(fontFamily)}] + " " + style[${JSON.stringify(`${fontFamily}-${fileName}`)}];
-      } else {
-        module.exports = ${JSON.stringify(`${fontFamily} ${fontFamily}-${fileName}`)};
-      }
-    `;
     cb(err, moduleContent);
   });
   font.timeoutIdentifier = setTimeout(() => {
-    writeFontFiles(fontFamily, font.iconMaker, err => {
-      console.log(err);
-      setTimeout(() => {
+    const isFirstTime = filesForFont[fontFamily] === undefined;
+    Promise.all(
+      [
+        isFirstTime ? Promise.resolve : new Promise((res, rej) => {
+          const isThereAChangeInLength = Object.keys(filesForFont[fontFamily]).length !== font.paths.length;
+          if (isThereAChangeInLength) {
+            res();
+          } else {
+            rej();
+          }
+        })
+      ].concat(isFirstTime ? [] : font.paths.map(currPathToSvg => new Promise((res, rej) => {
+        fs.readFile(currPathToSvg, (err, data) => {
+          const isThereAChangeInHashForSvg = filesForFont[fontFamily][currPathToSvg] === getSha1ForContent(data);
+          if (isThereAChangeInHashForSvg) {
+            res();
+          } else {
+            rej();
+          }
+        });
+      })))
+    ).then(() => {
+      filesForFont[fontFamily] = {};
+      Promise.all(
+        [
+          new Promise((res, rej) => {
+            writeFontFiles(fontFamily, font.iconMaker, err => {
+              if (err) {
+                rej(err);
+              } else {
+                res();
+              }
+            });
+          })
+        ].concat(font.paths.map(currPathToSvg => new Promise((res, rej) => {
+          fs.readFile(currPathToSvg, (err, data) => {
+            if (err) {
+              rej(err);
+            } else {
+              filesForFont[fontFamily][currPathToSvg] = getSha1ForContent(data);
+              res();
+            }
+          });
+        })))
+      ).then(() => {
+        font.doOnFinish.forEach(fn => fn());
+        delete fonts[fontFamily];
+      }, err => {
         font.doOnFinish.forEach(fn => fn(err));
         delete fonts[fontFamily];
-      }, 1000);
+      });
     });
   }, 1000);
 };

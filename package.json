@@ -29,6 +29,7 @@
     "webpack": "^1.13.2"
   },
   "dependencies": {
+    "crypto": "0.0.3",
     "icon-maker": "^0.2.4",
     "loader-utils": "^0.2.16",
     "uuid": "^3.0.1"
