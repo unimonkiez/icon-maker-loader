@@ -106,27 +106,33 @@ module.exports = function iconMakerLoader() {
   });
   font.timeoutIdentifier = setTimeout(() => {
     const isFirstTime = filesForFont[fontFamily] === undefined;
-    Promise.all(
-      [
-        isFirstTime ? Promise.resolve : new Promise((res, rej) => {
-          const isThereAChangeInLength = Object.keys(filesForFont[fontFamily]).length !== font.paths.length;
-          if (isThereAChangeInLength) {
-            res();
-          } else {
-            rej();
-          }
-        })
-      ].concat(isFirstTime ? [] : font.paths.map(currPathToSvg => new Promise((res, rej) => {
-        fs.readFile(currPathToSvg, (err, data) => {
-          const isThereAChangeInHashForSvg = filesForFont[fontFamily][currPathToSvg] === getSha1ForContent(data);
-          if (isThereAChangeInHashForSvg) {
-            res();
-          } else {
-            rej();
-          }
-        });
-      })))
-    ).then(() => {
+    let shouldRebundleFontPromise;
+    if (isFirstTime) {
+      shouldRebundleFontPromise = Promise.resolve();
+    } else {
+      shouldRebundleFontPromise = Promise.all(
+        [
+          new Promise((res, rej) => {
+            const isThereAChangeInLength = Object.keys(filesForFont[fontFamily]).length !== font.paths.length;
+            if (isThereAChangeInLength) {
+              res();
+            } else {
+              rej();
+            }
+          })
+        ].concat(font.paths.map(currPathToSvg => new Promise((res, rej) => {
+          fs.readFile(currPathToSvg, (err, data) => {
+            const isThereAChangeInHashForSvg = filesForFont[fontFamily][currPathToSvg] === getSha1ForContent(data);
+            if (isThereAChangeInHashForSvg) {
+              res();
+            } else {
+              rej();
+            }
+          });
+        })))
+      );
+    }
+    shouldRebundleFontPromise.then(() => {
       filesForFont[fontFamily] = {};
       Promise.all(
         [
@@ -156,6 +162,9 @@ module.exports = function iconMakerLoader() {
         font.doOnFinish.forEach(fn => fn(err));
         delete fonts[fontFamily];
       });
+    }, () => {
+      font.doOnFinish.forEach(fn => fn());
+      delete fonts[fontFamily];
     });
   }, 1000);
 };
