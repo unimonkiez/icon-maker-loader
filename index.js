@@ -56,9 +56,8 @@ const writeFontFiles = (fontFamily, iconMaker, cb) => {
             style = require("./${fontFamily}.css");
           } catch(e) {
             if (e.code !== 'MODULE_NOT_FOUND') throw e;
-            style = {};
           }
-          module.exports = style.locals;`, writeErr => {
+          module.exports = style;`, writeErr => {
             if (writeErr) {
               reject(writeErr);
             } else {
