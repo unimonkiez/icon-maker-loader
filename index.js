@@ -93,8 +93,9 @@ module.exports = function iconMakerLoader() {
   const cb = this.async();
   const moduleContent = `
   var style = require(${JSON.stringify(`${tmpFolderForNode}/${fontFamily}.js`)});
-  if (style) {
-    module.exports = style[${JSON.stringify(fontFamily)}] + " " + style[${JSON.stringify(`${fontFamily}-${fileName}`)}];
+  var mainClass = style[${JSON.stringify(fontFamily)}];
+  if (mainClass) {
+    module.exports = mainClass + " " + style[${JSON.stringify(`${fontFamily}-${fileName}`)}];
   } else {
     module.exports = ${JSON.stringify(`${fontFamily} ${fontFamily}-${fileName}`)};
   }
