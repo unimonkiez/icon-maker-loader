@@ -20,7 +20,7 @@ module.exports = {
         include: path.join(__dirname, 'icons') // To avoid clash of svgs
       }, {
         test: /\.css$/, // Have to configure css loader for the generated css
-        loader: 'css'
+        loader: 'style!css' // you can use `extract-text-webpack-plugin` instead of style-loader if it fits your needs
       }, {
         test: /\.(woff|eot|ttf|svg)$/, // Have to configure fonts loaders for the generated fonts
         loader: 'url',
